@@ -1,8 +1,14 @@
 ﻿using Application.BookQueries.GetAllBooks;
 using Application.BookQueries.GetBookById;
+using Application.BookCommands.AddBookCommand;
 using Infrastructure.Database;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Domain;
+using Application.BookCommands.DeleteBookCommand;
+using Application.BookCommands.UpdateBookCommand;
+using Application.AuthorCommands.AddAuthorCommand;
 
 namespace API.Controllers
 {
@@ -10,34 +16,66 @@ namespace API.Controllers
     [ApiController]
     public class BookController : ControllerBase
     {
-        private readonly FakeDatabase _fakeDatabase;
 
+        internal readonly IMediator _mediator;
 
-        public BookController(FakeDatabase fakeDatabase)
+        public BookController(IMediator mediator)
         {
-            _fakeDatabase = fakeDatabase;
+            _mediator = mediator;
+        }
+
+
+        [HttpGet]
+        [Route("GetAllBooks")]
+        public async Task <IActionResult> GetAllBooks()
+        {
+           return Ok (await _mediator.Send(new GetAllBooksQuery()));
         }
 
         [HttpGet]
-        public IActionResult GetAllBooks()
+        [Route("GetBookById/{id}")]
+        public async Task<IActionResult> GetBookById(Guid id)
         {
-            var query = new GetAllBooksQuery();
-            var handler = new GetAllBooksQueryHandler(_fakeDatabase);
-            var books = handler.Handle(query);
-            return Ok(books);
+            return Ok(await _mediator.Send(new  GetBookByIdQuery(id)));
         }
 
-        [HttpGet("{id}")]
-        public IActionResult GetBookById(int id)
+        [HttpPost]
+        [Route("AddBookCommand")]
+
+        public async void AddBookCommand([FromBody] Book newBook)
         {
-            var query = new GetBookByIdQuery { Id = id };
-            var handler = new GetBookByIdQueryHandler(_fakeDatabase);
-            var book = handler.Handle(query);
-            if (book == null)
+            await _mediator.Send(new AddBookCommand(newBook));
+        }
+
+        [HttpDelete]
+        [Route("DeleteBookCommand{id}")]
+        public async Task<IActionResult> DeleteBook(Guid id)
+        {
+            try
             {
-                return NotFound($"Book with ID {id} not found.");
+                var result = await _mediator.Send(new DeleteBookCommand(id));
+                return Ok(result);
             }
-            return Ok(book);
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpPut]
+        [Route("UpdateBookCommand{id}")]
+        public async Task<IActionResult> UpdateBook(Guid id, [FromBody] UpdateBookCommand request)
+        {
+            try
+            {
+                var command = new UpdateBookCommand(id, request.NewTitle, request.NewDescription);
+                var updatedBook = await _mediator.Send(command);
+                return Ok(updatedBook);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
     }
 }

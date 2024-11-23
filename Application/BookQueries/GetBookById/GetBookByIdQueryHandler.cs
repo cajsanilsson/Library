@@ -1,14 +1,10 @@
 ﻿using Domain;
 using Infrastructure.Database;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MediatR;
 
 namespace Application.BookQueries.GetBookById
 {
-    public class GetBookByIdQueryHandler
+    public class GetBookByIdQueryHandler : IRequestHandler<GetBookByIdQuery, Book>
     {
         private readonly FakeDatabase _fakeDatabase;
 
@@ -17,9 +13,10 @@ namespace Application.BookQueries.GetBookById
             _fakeDatabase = fakeDatabase;
         }
 
-        public Book Handle(GetBookByIdQuery query)
+        public Task <Book> Handle(GetBookByIdQuery query, CancellationToken cancellationToken)
         {
-            return _fakeDatabase.books.FirstOrDefault(b => b.Id == query.Id);
+            Book bookOfChoice = _fakeDatabase.books.FirstOrDefault(book => book.Id == query.Id)!;
+            return Task.FromResult(bookOfChoice);
         }
     }
 }
