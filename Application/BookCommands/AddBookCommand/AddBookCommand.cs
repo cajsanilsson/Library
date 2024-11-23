@@ -1,17 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using Domain;
 
 namespace Application.BookCommands.AddBookCommand
 {
-    public class AddBookCommand : IRequest
+    public class AddBookCommand : IRequest<Book>
     {
+       
+
+        public AddBookCommand(Book newBook)
+        {
+            NewBook = newBook;
+            
+        }
+
+        public Book NewBook { get;}
+
 
     }
-
-    internal interface IRequest
-    {
-    }
+   
 }

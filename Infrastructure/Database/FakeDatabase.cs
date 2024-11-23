@@ -9,29 +9,32 @@ namespace Infrastructure.Database
 {
     public class FakeDatabase
     {
-        public List <Book> books { get { return booksInDb; } set{ booksInDb = value; } }
-
-        public List<Author> authors { get { return authorsInDb; } set { authorsInDb = value; } } 
-
-        List<Book> booksInDb = new List<Book>
+        public List<Book> books
         {
-            new Book (1, "FirstBook", "The first book"),
-            new Book (2, "SecondBook", "The second book"),
-            new Book (3, "ThirdBook", "The third book"),
-            new Book (4, "FourthBook", "The fourth book"),
-            new Book (5, "Fi´fthBook", "The fifth book")
-        };
-
-        List<Author> authorsInDb = new List<Author>
-        {
-            new Author (1, "Author1"),
-            new Author (2, "Author2"),
-            new Author (3, "Author3")
-        };
-        public Book AddNewBook(Book book)
-        {
-            booksInDb.Add (book);
-            return book;
+            get { return allBooksFromDB; }
+            set { allBooksFromDB = value; }
         }
+
+        List<Book> allBooksFromDB = new List<Book>()
+        {
+            new Book { Id = Guid.NewGuid(), Title = "FirstBoook", Description = "The first book" },
+            new Book { Id = Guid.NewGuid(), Title = "SecondBook", Description = "The second book" },
+            new Book { Id = Guid.NewGuid(), Title = "ThirdBook", Description = "The third book" },
+            new Book { Id = Guid.NewGuid(), Title = "FourthBook", Description = "The fourth book" },
+            new Book { Id = Guid.NewGuid(), Title = "FifthBook", Description = "The fifth book" },
+        };
+
+        public List<Author> authors
+        {
+            get { return allAuthorsFromDB; }
+            set { allAuthorsFromDB = value; }
+        }
+
+        List<Author> allAuthorsFromDB = new List<Author>()
+        {
+            new Author { Id = Guid.NewGuid(), Name = "Author1" },
+            new Author { Id = Guid.NewGuid(), Name = "Author2" },
+            new Author { Id = Guid.NewGuid(), Name = "Author3" },
+        };
     }
 }

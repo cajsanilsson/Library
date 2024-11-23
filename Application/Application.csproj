@@ -12,16 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="AuthorCommands\AddAuthorCommand\" />
-    <Folder Include="AuthorCommands\DeleteAuthorCommand\" />
-    <Folder Include="AuthorCommands\UpdateAuthorCommand\" />
-    <Folder Include="AuthorQueries\GetAuthorById\" />
-    <Folder Include="AuthorQueries\GetAllAuthors\" />
-    <Folder Include="BookCommands\DeleteBookCommand\" />
-    <Folder Include="BookCommands\UpdateBookCommand\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="MediatR" Version="12.4.1" />
   </ItemGroup>
 

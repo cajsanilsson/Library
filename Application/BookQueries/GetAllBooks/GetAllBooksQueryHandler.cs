@@ -5,10 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MediatR;
 
 namespace Application.BookQueries.GetAllBooks
 {
-    public class GetAllBooksQueryHandler
+    public class GetAllBooksQueryHandler : IRequestHandler<GetAllBooksQuery, List<Book>>
     {
         private readonly FakeDatabase _fakeDatabase;
 
@@ -17,9 +18,10 @@ namespace Application.BookQueries.GetAllBooks
             _fakeDatabase = fakeDatabase;
         }
 
-        public List<Book> Handle(GetAllBooksQuery query)
+        public Task <List<Book>> Handle (GetAllBooksQuery query, CancellationToken cancellationToken)
         {
-            return _fakeDatabase.books;
+            List<Book> books = _fakeDatabase.books;
+            return Task.FromResult(books);
         }
 
         

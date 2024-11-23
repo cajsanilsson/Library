@@ -1,22 +1,36 @@
 ﻿using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Domain;
+using Infrastructure.Database;
 
 namespace Application.BookCommands.AddBookCommand
 {
-    /*public class AddBookCommandHandler : IRequestHandler<AddBookCommand>
+    public class AddBookCommandHandler : IRequestHandler<AddBookCommand, Book>
     {
-        public AddBookCommandHandler()
-        {
+        private readonly FakeDatabase _fakeDatabase;
 
+        public AddBookCommandHandler(FakeDatabase fakeDatabase)
+        {
+            _fakeDatabase = fakeDatabase;
         }
 
-        public Task Handle(AddBookCommand request, CancellationToken cancellationToken)
+        public Task<Book> Handle(AddBookCommand request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+
+            Book newBook = new()
+            {
+                Id = Guid.NewGuid(),
+                Title = request.NewBook.Title,
+                Description = request.NewBook.Description
+            };
+
+
+            _fakeDatabase.books.Add(newBook);
+            
+
+            return Task.FromResult(newBook);
         }
-    }*/
+
+
+
+    }
 }

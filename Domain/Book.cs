@@ -8,14 +8,18 @@ namespace Domain
 {
     public class Book
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
-        public Book(int id, string title, string description) 
+
+
+        public Book() { }
+        public Book(Guid id, string title, string description)
         {
             Id = id;
             Title = title;
             Description = description;
+           
         }
     }
 }
