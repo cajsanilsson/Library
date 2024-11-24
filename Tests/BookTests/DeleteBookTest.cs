@@ -1,6 +1,8 @@
-﻿using Application.BookCommands.DeleteBookCommand;
-using Domain;
+﻿using Application.AuthorQueries.GetAllAuthors;
+using Application.BookCommands.DeleteBookCommand;
+using Domain.Models;
 using Infrastructure.Database;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +16,7 @@ namespace Tests.BookTests
         [Fact]
         public async Task DeleteBookCommandHandler_Should_RemoveBookFromFakeDatabase()
         {
-            // Arrange
+            var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<DeleteBookCommandHandler>();
             var fakeDatabase = new FakeDatabase();
             var book = new Book
             {
@@ -25,7 +27,7 @@ namespace Tests.BookTests
 
             fakeDatabase.books.Add(book);
 
-            var handler = new DeleteBookCommandHandler(fakeDatabase);
+            var handler = new DeleteBookCommandHandler(fakeDatabase, logger);
             var command = new DeleteBookCommand(book.Id);
 
             // Act

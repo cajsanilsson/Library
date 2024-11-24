@@ -1,5 +1,5 @@
 ﻿using Application.AuthorCommands.DeleteAuthorCommand;
-using Domain;
+using Domain.Models;
 using Infrastructure.Database;
 using System;
 using System.Collections.Generic;

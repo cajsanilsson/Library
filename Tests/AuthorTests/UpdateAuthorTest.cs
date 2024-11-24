@@ -1,5 +1,5 @@
 ﻿using Application.AuthorCommands.UpdateAuthorCommand;
-using Domain;
+using Domain.Models;
 using Infrastructure.Database;
 using System;
 using System.Collections.Generic;

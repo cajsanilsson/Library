@@ -1,6 +1,7 @@
 ﻿using Application.AuthorQueries.GetAllAuthors;
-using Domain;
+using Domain.Models;
 using Infrastructure.Database;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,7 @@ namespace Tests.AuthorTests
         {
             // Arrange
             var fakeDatabase = new FakeDatabase();
+            var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<GetAllAuthorsQueryHandler>();
             fakeDatabase.authors.Add(new Author
             {
                 Id = Guid.NewGuid(),
@@ -27,7 +29,7 @@ namespace Tests.AuthorTests
                 Name = "Author 2"
             });
 
-            var handler = new GetAllAuthorsQueryHandler(fakeDatabase);
+            var handler = new GetAllAuthorsQueryHandler(fakeDatabase, logger);
             var query = new GetAllAuthorsQuery();
 
             // Act

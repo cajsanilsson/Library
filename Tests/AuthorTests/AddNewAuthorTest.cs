@@ -1,5 +1,5 @@
 ﻿using Application.AuthorCommands.AddAuthorCommand;
-using Domain;
+using Domain.Models;
 using Infrastructure.Database;
 using System;
 using System.Collections.Generic;
@@ -23,7 +23,7 @@ namespace Tests.AuthorTests
                 Name = "Test Author"
             };
 
-            var command = new AddAuthorCommand(newAuthor);
+            var command = new AddAuthorCommand();
 
             // Act
             var result = await handler.Handle(command, CancellationToken.None);

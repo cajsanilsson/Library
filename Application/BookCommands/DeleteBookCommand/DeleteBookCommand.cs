@@ -1,7 +1,7 @@
 ﻿using MediatR;
-using Domain;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
+using Domain.Models;
 
 namespace Application.BookCommands.DeleteBookCommand
 {

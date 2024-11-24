@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Application.AuthorQueries.GetAllAuthors;
 using Application.BookCommands.AddBookCommand;
-using Domain;
+using Domain.Models;
 using Infrastructure.Database;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 
 namespace Tests.BookTests
@@ -16,10 +18,10 @@ namespace Tests.BookTests
         [Fact]
         public async Task AddBookToFakeDatabase()
         {
-            // Arrange
+            var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<AddBookCommandHandler>();
             var fakeDatabase = new FakeDatabase();
 
-            var handler = new AddBookCommandHandler(fakeDatabase);
+            var handler = new AddBookCommandHandler(fakeDatabase, logger);
 
             var newBook = new Book
             {

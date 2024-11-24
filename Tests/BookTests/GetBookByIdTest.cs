@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Application.AuthorQueries.GetAllAuthors;
 using Application.BookQueries.GetBookById;
-using Domain;
+using Domain.Models;
 using Infrastructure.Database;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Tests.BookTests
 {
@@ -15,7 +17,7 @@ namespace Tests.BookTests
         [Fact]
         public async Task GetBookByIdQueryHandler_Should_ReturnCorrectBook_WhenBookExists()
         {
-            // Arrange
+            var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<GetBookByIdQueryHandler>();
             var fakeDatabase = new FakeDatabase();
             var book = new Book
             {
@@ -26,7 +28,7 @@ namespace Tests.BookTests
 
             fakeDatabase.books.Add(book);
 
-            var handler = new GetBookByIdQueryHandler(fakeDatabase);
+            var handler = new GetBookByIdQueryHandler(fakeDatabase, logger);
             var query = new GetBookByIdQuery(book.Id);
 
             // Act
@@ -42,10 +44,10 @@ namespace Tests.BookTests
         [Fact]
         public async Task GetBookByIdQueryHandler_Should_ReturnNull_WhenBookDoesNotExist()
         {
-            // Arrange
+            var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<GetBookByIdQueryHandler>();
             var fakeDatabase = new FakeDatabase();
 
-            var handler = new GetBookByIdQueryHandler(fakeDatabase);
+            var handler = new GetBookByIdQueryHandler(fakeDatabase, logger);
             var query = new GetBookByIdQuery(Guid.NewGuid()); 
 
             // Act
