@@ -1,5 +1,4 @@
-﻿
-using Domain;
+﻿using Domain.Models;
 using Infrastructure.Database;
 using MediatR;
 
@@ -17,13 +16,30 @@ namespace Application.AuthorCommands.DeleteAuthorCommand
 
         public Task<Author> Handle(DeleteAuthorCommand request, CancellationToken cancellationToken)
         {
-            var authorToDelete = _fakeDatabase.authors.FirstOrDefault(b => b.Id == request.Id);
+            if (request.Id == Guid.Empty)
+            {
+                throw new ArgumentException("Invalid author ID.", nameof(request.Id));
+            }
 
+            var authorToDelete = _fakeDatabase.authors.FirstOrDefault(a => a.Id == request.Id);
 
-            _fakeDatabase.authors.Remove(authorToDelete);
+            if (authorToDelete == null)
+            {
+                throw new KeyNotFoundException($"Author with ID {request.Id} not found.");
+            }
 
-            return Task.FromResult(authorToDelete);
+            try
+            {
+                _fakeDatabase.authors.Remove(authorToDelete);
+
+                return Task.FromResult(authorToDelete);
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("An error occurred while deleting the author.", ex);
+            }
         }
+
     }
 }
 

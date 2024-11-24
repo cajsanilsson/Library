@@ -1,4 +1,4 @@
-﻿using Domain;
+﻿using Domain.Models;
 using Infrastructure.Database;
 using Application.BookQueries.GetAllBooks;
 using System;
@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Application.AuthorQueries.GetAllAuthors;
+using Microsoft.Extensions.Logging;
 
 namespace Tests.BookTests
 {
@@ -14,7 +16,7 @@ namespace Tests.BookTests
         [Fact]
         public async Task GetBooksQueryHandler_Should_ReturnAllBooksFromFakeDatabase()
         {
-            // Arrange
+            var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<GetAllBooksQueryHandler>();
             var fakeDatabase = new FakeDatabase();
             fakeDatabase.books.Add(new Book
             {
@@ -29,7 +31,7 @@ namespace Tests.BookTests
                 Description = "Description 2"
             });
 
-            var handler = new GetAllBooksQueryHandler(fakeDatabase);
+            var handler = new GetAllBooksQueryHandler(fakeDatabase, logger);
             var query = new GetAllBooksQuery();
 
             // Act

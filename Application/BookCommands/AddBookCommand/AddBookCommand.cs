@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using Domain;
+using Domain.Models;
 
 namespace Application.BookCommands.AddBookCommand
 {

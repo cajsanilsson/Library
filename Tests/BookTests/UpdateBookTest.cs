@@ -1,6 +1,8 @@
-﻿using Application.BookCommands.UpdateBookCommand;
-using Domain;
+﻿using Application.AuthorQueries.GetAllAuthors;
+using Application.BookCommands.UpdateBookCommand;
+using Domain.Models;
 using Infrastructure.Database;
+using Microsoft.Extensions.Logging;
 
 namespace Tests.BookTests
 {
@@ -9,7 +11,7 @@ namespace Tests.BookTests
         [Fact]
         public async Task UpdateBookCommandHandler_Should_UpdateBookDetailsInFakeDatabase()
         {
-            // Arrange
+            var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<UpdateBookCommandHandler>();
             var fakeDatabase = new FakeDatabase();
             var book = new Book
             {
@@ -20,7 +22,7 @@ namespace Tests.BookTests
 
             fakeDatabase.books.Add(book);
 
-            var handler = new UpdateBookCommandHandler(fakeDatabase);
+            var handler = new UpdateBookCommandHandler(fakeDatabase, logger);
             var command = new UpdateBookCommand(book.Id, "New Title", "New Description");
 
             // Act

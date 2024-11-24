@@ -1,5 +1,5 @@
 ﻿using Application.BookCommands.AddBookCommand;
-using Domain;
+using Domain.Models;
 using Infrastructure.Database;
 using MediatR;
 using System;
@@ -19,23 +19,36 @@ namespace Application.AuthorCommands.AddAuthorCommand
             _fakeDatabase = fakeDatabase;
         }
 
-        public Task<Author> Handle(AddAuthorCommand request, CancellationToken cancellationToken)
+        public async Task<Author> Handle(AddAuthorCommand request, CancellationToken cancellationToken)
         {
-
-            Author newAuthor = new()
+            if (string.IsNullOrEmpty(request.NewAuthor.Name))
             {
-                Id = Guid.NewGuid(),
-                Name = request.NewAuthor.Name
-            };
+                throw new ArgumentException("Author name cannot be empty.", nameof(request.NewAuthor.Name));
+            }
 
+            var existingAuthor = _fakeDatabase.authors
+                .FirstOrDefault(a => a.Name.Equals(request.NewAuthor.Name, StringComparison.OrdinalIgnoreCase));
+            if (existingAuthor != null)
+            {
+                throw new InvalidOperationException($"An author with the name '{request.NewAuthor.Name}' already exists.");
+            }
 
-            _fakeDatabase.authors.Add(newAuthor);
+            try
+            {
+                Author newAuthor = new()
+                {
+                    Id = Guid.NewGuid(),
+                    Name = request.NewAuthor.Name
+                };
 
+                _fakeDatabase.authors.Add(newAuthor);
 
-            return Task.FromResult(newAuthor);
+                return await Task.FromResult(newAuthor); 
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("An error occurred while adding a new author.", ex);
+            }
         }
-
-
-
     }
 }

@@ -4,19 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain
+namespace Domain.Models
 {
     public class Author
     {
         public Guid Id { get; set; }
-        public string Name {  get; set; }
+        public string Name { get; set; }
         public Author() { }
 
         public Author(Guid id, string name)
         {
             Id = id;
             Name = name;
-         
+
 
         }
 

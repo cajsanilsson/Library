@@ -1,5 +1,5 @@
 ﻿using Application.BookCommands.UpdateBookCommand;
-using Domain;
+using Domain.Models;
 using Infrastructure.Database;
 using MediatR;
 using System;
@@ -21,20 +21,31 @@ namespace Application.AuthorCommands.UpdateAuthorCommand
 
         public Task<Author> Handle(UpdateAuthorCommand request, CancellationToken cancellationToken)
         {
-            // Leta upp boken baserat på ID
-            var authorToUpdate = _fakeDatabase.authors.FirstOrDefault(b => b.Id == request.AuthorId);
+            if (request.AuthorId == Guid.Empty)
+            {
+                throw new ArgumentException("Invalid author ID.", nameof(request.AuthorId));
+            }
+
+            var authorToUpdate = _fakeDatabase.authors.FirstOrDefault(a => a.Id == request.AuthorId);
 
             if (authorToUpdate == null)
             {
-                throw new KeyNotFoundException($"Book with ID {request.AuthorId} not found.");
+                throw new KeyNotFoundException($"Author with ID {request.AuthorId} not found.");
             }
 
-            // Uppdatera bokens egenskaper
-            authorToUpdate.Name = request.UpdatedName ?? authorToUpdate.Name;
-            
+            if (!string.IsNullOrEmpty(request.UpdatedName))
+            {
+                authorToUpdate.Name = request.UpdatedName;
+            }
 
-            // Returnera den uppdaterade boken
-            return Task.FromResult(authorToUpdate);
+            try
+            {
+                return Task.FromResult(authorToUpdate);
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("An error occurred while updating the author.", ex);
+            }
         }
 
     }

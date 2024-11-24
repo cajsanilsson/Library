@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MediatR;
-using Domain;
+using Domain.Models;
 
 namespace Application.BookQueries.GetBookById
 {
