@@ -15,9 +15,9 @@ namespace Tests.AuthorTests
         [Fact]
         public async Task GetAllAuthorsQueryHandler_Should_ReturnAllAuthorsFromFakeDatabase()
         {
-            // Arrange
-            var fakeDatabase = new FakeDatabase();
             var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<GetAllAuthorsQueryHandler>();
+            var fakeDatabase = new FakeDatabase();
+            fakeDatabase.authors.Clear();
             fakeDatabase.authors.Add(new Author
             {
                 Id = Guid.NewGuid(),
@@ -32,12 +32,10 @@ namespace Tests.AuthorTests
             var handler = new GetAllAuthorsQueryHandler(fakeDatabase, logger);
             var query = new GetAllAuthorsQuery();
 
-            // Act
             var authors = await handler.Handle(query, CancellationToken.None);
 
-            // Assert
             Assert.NotNull(authors);
-            Assert.Equal(2, authors.Count); 
+            Assert.Equal(2, authors.Count);
         }
     }
 }

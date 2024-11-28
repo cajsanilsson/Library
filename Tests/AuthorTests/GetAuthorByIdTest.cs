@@ -16,7 +16,6 @@ namespace Tests.AuthorTests
         [Fact]
         public async Task GetAuthorByIdQueryHandler_Should_ReturnCorrectAuthor_WhenAuthorExists()
         {
-            // Arrange
             var fakeDatabase = new FakeDatabase();
             var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<GetAuthorByIdQueryHandler>();
             var author = new Author
@@ -27,22 +26,18 @@ namespace Tests.AuthorTests
 
             fakeDatabase.authors.Add(author);
 
-            //hej
-
             var handler = new GetAuthorByIdQueryHandler(fakeDatabase, logger);
             var query = new GetAuthorByIdQuery(author.Id);
 
-            // Act
             var result = await handler.Handle(query, CancellationToken.None);
 
-            // Assert
             Assert.NotNull(result);
             Assert.Equal(author.Id, result.Id);
             Assert.Equal(author.Name, result.Name);
         }
 
         [Fact]
-        public async Task GetAuthorByIdQueryHandler_Should_ReturnNull_WhenAuthorDoesNotExist()
+        public async Task GetAuthorByIdQueryHandler_Should_ThrowKeyNotFoundException_WhenAuthorDoesNotExist()
         {
             var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<GetAuthorByIdQueryHandler>();
             var fakeDatabase = new FakeDatabase();
@@ -50,11 +45,9 @@ namespace Tests.AuthorTests
             var handler = new GetAuthorByIdQueryHandler(fakeDatabase, logger);
             var query = new GetAuthorByIdQuery(Guid.NewGuid());
 
-            // Act
-            var result = await handler.Handle(query, CancellationToken.None);
+            var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => handler.Handle(query, CancellationToken.None));
 
-            // Assert
-            Assert.Null(result);
+            Assert.Equal($"Author with ID {query.Id} not found.", exception.Message);
         }
     }
 }

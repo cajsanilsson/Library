@@ -14,7 +14,6 @@ namespace Tests.AuthorTests
         [Fact]
         public async Task DeleteAuthorCommandHandler_Should_RemoveAuthorFromFakeDatabase()
         {
-            // Arrange
             var fakeDatabase = new FakeDatabase();
             var author = new Author
             {
@@ -27,11 +26,9 @@ namespace Tests.AuthorTests
             var handler = new DeleteAuthorCommandHandler(fakeDatabase);
             var command = new DeleteAuthorCommand(author.Id);
 
-            // Act
             await handler.Handle(command, CancellationToken.None);
 
-            // Assert
-            Assert.DoesNotContain(author, fakeDatabase.authors); 
+            Assert.DoesNotContain(author, fakeDatabase.authors);
         }
     }
 }
