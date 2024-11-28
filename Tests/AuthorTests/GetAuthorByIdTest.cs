@@ -27,6 +27,8 @@ namespace Tests.AuthorTests
 
             fakeDatabase.authors.Add(author);
 
+            //hej
+
             var handler = new GetAuthorByIdQueryHandler(fakeDatabase, logger);
             var query = new GetAuthorByIdQuery(author.Id);
 
