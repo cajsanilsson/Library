@@ -31,24 +31,12 @@ namespace Tests.BookTests
 
             var command = new AddBookCommand(newBook);
 
-            // Act
             var result = await handler.Handle(command, CancellationToken.None);
 
-            // Assert
-            Assert.NotNull(result); 
-            Assert.Equal("Test Title", result.Title); 
-            Assert.Equal("Test Description", result.Description); 
-            Assert.Contains(result, fakeDatabase.books); 
-        }
-
-        [Fact]
-        public void FakeDatabase_Should_StartEmpty()
-        {
-            // Arrange
-            var fakeDatabase = new FakeDatabase();
-
-            // Assert
-            Assert.Empty(fakeDatabase.books);
+            Assert.NotNull(result);
+            Assert.Equal("Test Title", result.Title);
+            Assert.Equal("Test Description", result.Description);
+            Assert.Contains(result, fakeDatabase.books);
         }
     }
 

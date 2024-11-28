@@ -18,6 +18,7 @@ namespace Tests.BookTests
         {
             var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<GetAllBooksQueryHandler>();
             var fakeDatabase = new FakeDatabase();
+            fakeDatabase.books.Clear();
             fakeDatabase.books.Add(new Book
             {
                 Id = Guid.NewGuid(),
@@ -34,12 +35,10 @@ namespace Tests.BookTests
             var handler = new GetAllBooksQueryHandler(fakeDatabase, logger);
             var query = new GetAllBooksQuery();
 
-            // Act
             var books = await handler.Handle(query, CancellationToken.None);
 
-            // Assert
             Assert.NotNull(books);
-            Assert.Equal(2, books.Count); 
+            Assert.Equal(2, books.Count);
         }
     }
 }

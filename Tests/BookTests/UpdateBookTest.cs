@@ -25,10 +25,8 @@ namespace Tests.BookTests
             var handler = new UpdateBookCommandHandler(fakeDatabase, logger);
             var command = new UpdateBookCommand(book.Id, "New Title", "New Description");
 
-            // Act
             var updatedBook = await handler.Handle(command, CancellationToken.None);
 
-            // Assert
             Assert.NotNull(updatedBook);
             Assert.Equal("New Title", updatedBook.Title);
             Assert.Equal("New Description", updatedBook.Description);
