@@ -14,7 +14,6 @@ namespace Tests.AuthorTests
         [Fact]
         public async Task AddAuthorCommandHandler_Should_AddAuthorToFakeDatabase()
         {
-            // Arrange
             var fakeDatabase = new FakeDatabase();
             var handler = new AddAuthorCommandHandler(fakeDatabase);
 
@@ -23,15 +22,13 @@ namespace Tests.AuthorTests
                 Name = "Test Author"
             };
 
-            var command = new AddAuthorCommand();
+            var command = new AddAuthorCommand(newAuthor);
 
-            // Act
             var result = await handler.Handle(command, CancellationToken.None);
 
-            // Assert
             Assert.NotNull(result);
             Assert.Equal("Test Author", result.Name);
-            Assert.Contains(result, fakeDatabase.authors); 
+            Assert.Contains(result, fakeDatabase.authors);
         }
     }
 }

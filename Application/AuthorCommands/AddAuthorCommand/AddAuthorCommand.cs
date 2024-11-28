@@ -5,13 +5,13 @@ namespace Application.AuthorCommands.AddAuthorCommand
 {
     public class AddAuthorCommand : IRequest<Author>
     {
-        public Author NewAuthor { get; set; } // Använd set för att tillåta deserialisering
+        public Author NewAuthor { get; }
 
-        // Standardkonstruktor som används av deserialisering
-        public AddAuthorCommand()
+        public AddAuthorCommand(Author newAuthor)
         {
+            NewAuthor = newAuthor ?? throw new ArgumentNullException(nameof(newAuthor));
         }
-       
+
 
 
     }
