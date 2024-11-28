@@ -14,6 +14,7 @@ namespace Tests.BookTests
     public class DeleteBookTest
     {
         [Fact]
+
         public async Task DeleteBookCommandHandler_Should_RemoveBookFromFakeDatabase()
         {
             var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<DeleteBookCommandHandler>();
@@ -30,11 +31,10 @@ namespace Tests.BookTests
             var handler = new DeleteBookCommandHandler(fakeDatabase, logger);
             var command = new DeleteBookCommand(book.Id);
 
-            // Act
             await handler.Handle(command, CancellationToken.None);
 
-            // Assert
-            Assert.DoesNotContain(book, fakeDatabase.books); 
+            Assert.DoesNotContain(book, fakeDatabase.books);
         }
+
     }
 }
