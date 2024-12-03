@@ -1,9 +1,4 @@
 ﻿using Domain.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Database
 {
@@ -35,6 +30,18 @@ namespace Infrastructure.Database
             new Author { Id = Guid.NewGuid(), Name = "Author1" },
             new Author { Id = Guid.NewGuid(), Name = "Author2" },
             new Author { Id = Guid.NewGuid(), Name = "Author3" },
+        };
+
+        public List<User> users
+        {
+            get { return allUsersFromDB; }
+            set { allUsersFromDB = value; }
+        }
+
+        List<User> allUsersFromDB = new List<User>()
+        {
+            new User { Id = Guid.NewGuid(),Username = "User1"},
+            new User { Id = Guid.NewGuid(),Username = "User2"}
         };
     }
 }
