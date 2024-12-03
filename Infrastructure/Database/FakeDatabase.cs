@@ -42,6 +42,7 @@ namespace Infrastructure.Database
         {
             new User { Id = Guid.NewGuid(),Username = "User1"},
             new User { Id = Guid.NewGuid(),Username = "User2"}
+            //test
         };
     }
 }
