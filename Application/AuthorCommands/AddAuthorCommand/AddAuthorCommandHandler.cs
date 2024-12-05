@@ -1,6 +1,7 @@
 ﻿using Application.BookCommands.AddBookCommand;
+using Application.Interface.RepositoryInterfaces;
 using Domain.Models;
-using Infrastructure.Database;
+
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -12,11 +13,11 @@ namespace Application.AuthorCommands.AddAuthorCommand
 {
     public class AddAuthorCommandHandler : IRequestHandler<AddAuthorCommand, Author>
     {
-        private readonly FakeDatabase _fakeDatabase;
+        private readonly IAuthorRepository _authorRepository;
 
-        public AddAuthorCommandHandler(FakeDatabase fakeDatabase)
+        public AddAuthorCommandHandler(IAuthorRepository authorRepository)
         {
-            _fakeDatabase = fakeDatabase;
+            _authorRepository = authorRepository;
         }
 
         public async Task<Author> Handle(AddAuthorCommand request, CancellationToken cancellationToken)
@@ -26,7 +27,7 @@ namespace Application.AuthorCommands.AddAuthorCommand
                 throw new ArgumentException("Author name cannot be empty.", nameof(request.NewAuthor.Name));
             }
 
-            var existingAuthor = _fakeDatabase.authors
+            var existingAuthor = _authorRepository.AddAuthor(request.NewAuthor)
                 .FirstOrDefault(a => a.Name.Equals(request.NewAuthor.Name, StringComparison.OrdinalIgnoreCase));
             if (existingAuthor != null)
             {
@@ -41,7 +42,7 @@ namespace Application.AuthorCommands.AddAuthorCommand
                     Name = request.NewAuthor.Name
                 };
 
-                _fakeDatabase.authors.Add(newAuthor);
+                _authorRepository.AddAuthor(request.NewAuthor);
 
                 return await Task.FromResult(newAuthor); 
             }
