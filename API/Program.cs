@@ -48,7 +48,7 @@ namespace API
 
             builder.Services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Malin Jonasson", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Cajsa Nilsson", Version = "v1" });
 
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
@@ -82,9 +82,13 @@ namespace API
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddApplication().AddInfrastructure();
+           
 
-        
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            builder.Services.AddApplication().AddInfrastructure(connectionString);
+
+
+
 
             var app = builder.Build();
 

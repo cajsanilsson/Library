@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API", "API\API.csproj", "{C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{6A959A50-7B9E-414E-A60C-DC0857154399}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{35BE0214-3947-4AE7-BCEC-8714D480918D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{35BE0214-3947-4AE7-BCEC-8714D480918D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
