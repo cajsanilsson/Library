@@ -65,12 +65,21 @@ namespace API.Controllers
         {
             try
             {
-                var bookToAdd = await _mediator.Send(command);
+                var operationResult = await _mediator.Send(command);
+
+                
+                if (!operationResult.Success)
+                {
+                    _logger.LogWarning("Failed to add book: {Error}", operationResult.ErrorMessage);
+                    return BadRequest(new { error = operationResult.ErrorMessage });
+                }
+
+                var bookToAdd = operationResult.Data; 
                 return CreatedAtAction(nameof(GetBookById), new { id = bookToAdd.Id }, bookToAdd);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error adding new book");
+                _logger.LogError(ex, "Error adding new author");
                 return StatusCode(500, new { error = "Internal server error" });
             }
         }

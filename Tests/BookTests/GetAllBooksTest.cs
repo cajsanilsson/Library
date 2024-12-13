@@ -1,44 +1,40 @@
 ﻿using Domain.Models;
 using Infrastructure.Database;
 using Application.BookQueries.GetAllBooks;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Application.AuthorQueries.GetAllAuthors;
-using Microsoft.Extensions.Logging;
+using Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace Tests.BookTests
 {
     public class GetAllBooksTest
     {
-        [Fact]
-        public async Task GetBooksQueryHandler_Should_ReturnAllBooksFromFakeDatabase()
+        private LibraryDatabase CreateInMemoryDatabase()
         {
-            var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<GetAllBooksQueryHandler>();
-            var fakeDatabase = new FakeDatabase();
-            fakeDatabase.books.Clear();
-            fakeDatabase.books.Add(new Book
-            {
-                Id = Guid.NewGuid(),
-                Title = "Book 1",
-                Description = "Description 1"
-            });
-            fakeDatabase.books.Add(new Book
-            {
-                Id = Guid.NewGuid(),
-                Title = "Book 2",
-                Description = "Description 2"
-            });
+            var options = new DbContextOptionsBuilder<LibraryDatabase>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
 
-            var handler = new GetAllBooksQueryHandler(fakeDatabase, logger);
-            var query = new GetAllBooksQuery();
+            return new LibraryDatabase(options);
+        }
 
-            var books = await handler.Handle(query, CancellationToken.None);
+        [Fact]
+        public async Task GetAllBooksQueryHandler_Should_ReturnAllBooksFromFakeDatabase()
+        {
+            using var database = CreateInMemoryDatabase();
+            var bookRepository = new BookRepository(database);
+            var handler = new GetAllBooksQueryHandler(bookRepository);
 
-            Assert.NotNull(books);
-            Assert.Equal(2, books.Count);
+            database.Books.Add(new Book { Id = Guid.NewGuid(), Title = "Test Book1", Description = "Test Description1"});
+            database.Books.Add(new Book { Id = Guid.NewGuid(), Title = "Test Book2", Description = "Test Description2" });
+            await database.SaveChangesAsync();
+
+            var getAllBooksQuery = new GetAllBooksQuery();
+
+            var result = await handler.Handle(getAllBooksQuery, CancellationToken.None);
+
+            Assert.True(result.Success);
+            Assert.Equal(2, result.Data.Count);
+            Assert.Equal("Operation successful", result.Message);
         }
     }
 }

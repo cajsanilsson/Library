@@ -1,7 +1,7 @@
 ﻿using Infrastructure.Database;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
-using Application.Interface.RepositoryInterfaces;
+using Application.Interfaces.RepositoryInterfaces;
 using Infrastructure.Repositories;
 
 
@@ -19,6 +19,10 @@ namespace Infrastructure
             });
 
             services.AddScoped<IAuthorRepository, AuthorRepository>();
+
+            services.AddScoped<IUserRepository, UserRepository>();
+            
+            services.AddScoped<IBookRepository, BookRepository>();
 
             return services;
         }

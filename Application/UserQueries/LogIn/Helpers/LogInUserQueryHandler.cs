@@ -1,31 +1,38 @@
-﻿using Domain.Models;
-using Infrastructure.Database;
+﻿using Application.Interfaces.RepositoryInterfaces;
+using Domain.Models;
 using MediatR;
 
 
 namespace Application.UserQueries.LogIn.Helpers
 {
-    public class LogInUserQueryHandler : IRequestHandler<LogInUserQuery, string>
+    public class LogInUserQueryHandler : IRequestHandler<LogInUserQuery, OperationResult<string>>
     {
-        private readonly FakeDatabase _fakeDatabase;
+        private readonly IUserRepository _userRepository;
         private readonly TokenHelper _tokenHelper;
 
-        public LogInUserQueryHandler(FakeDatabase fakeDatabase, TokenHelper tokenHelper)
+        public LogInUserQueryHandler(IUserRepository userRepository, TokenHelper tokenHelper)
         {
-            _fakeDatabase = fakeDatabase;
+            _userRepository = userRepository;
             _tokenHelper = tokenHelper;
         }
-        public Task<string> Handle(LogInUserQuery request, CancellationToken cancellationToken)
+        public async Task<OperationResult<string>> Handle(LogInUserQuery request, CancellationToken cancellationToken)
         {
-            var user = _fakeDatabase.users.FirstOrDefault(user => user.Username == request.LogInUser.Username && user.Password == request.LogInUser.Password);
-            if (user == null)
 
+            if (string.IsNullOrWhiteSpace(request.LogInUser.Username) || string.IsNullOrWhiteSpace(request.LogInUser.Password))
             {
-                throw new UnauthorizedAccessException("Invalid username or password");
+                return OperationResult<string>.Failure("Username and password cannot be empty");
+            }
+
+            var user = await _userRepository.LogInUser(request.LogInUser.Username, request.LogInUser.Password);
+
+            if (user == null)
+            {
+                return OperationResult<string>.Failure("Invalid username or password");
             }
 
             string token = _tokenHelper.GenerateJwtToken(user);
-            return Task.FromResult(token);
+
+            return OperationResult<string>.Successful(token, "Login successful");
         }
     }
 }

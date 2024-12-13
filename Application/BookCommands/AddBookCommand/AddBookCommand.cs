@@ -3,7 +3,7 @@ using Domain.Models;
 
 namespace Application.BookCommands.AddBookCommand
 {
-    public class AddBookCommand : IRequest<Book>
+    public class AddBookCommand : IRequest<OperationResult<Book>>
     {
        
 

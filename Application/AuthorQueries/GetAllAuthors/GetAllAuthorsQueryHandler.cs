@@ -1,39 +1,35 @@
-﻿using Application.BookQueries.GetAllBooks;
+﻿
+using Application.Interfaces.RepositoryInterfaces;
 using Domain.Models;
-using Infrastructure.Database;
 using MediatR;
-using Microsoft.Extensions.Logging;
-
 
 namespace Application.AuthorQueries.GetAllAuthors
 {
-    public class GetAllAuthorsQueryHandler : IRequestHandler<GetAllAuthorsQuery, List<Author>>
+    public class GetAllAuthorsQueryHandler : IRequestHandler<GetAllAuthorsQuery, OperationResult <List<Author>>>
     {
-        private readonly FakeDatabase _fakeDatabase;
-        private readonly ILogger<GetAllAuthorsQueryHandler> _logger;
-        
+        private readonly IAuthorRepository _authorRepository;
 
-        public GetAllAuthorsQueryHandler(FakeDatabase fakeDatabase, ILogger<GetAllAuthorsQueryHandler> logger)
+        public GetAllAuthorsQueryHandler(IAuthorRepository authorRepository)
         {
-            _fakeDatabase = fakeDatabase;
-            _logger = logger;
+            _authorRepository = authorRepository;
         }
 
-        public Task<List<Author>> Handle(GetAllAuthorsQuery query, CancellationToken cancellationToken)
+        public async Task<OperationResult<List<Author>>> Handle(GetAllAuthorsQuery query, CancellationToken cancellationToken)
         {
             try
             {
-                if (_fakeDatabase.authors == null)
+                var authors = await _authorRepository.GetAllAuthors();
+
+                if (authors == null || authors.Count == 0)
                 {
-                    throw new InvalidOperationException("The authors collection is not available.");
+                    return OperationResult<List<Author>>.Failure("No authors found.");
                 }
 
-                return Task.FromResult(_fakeDatabase.authors);
+                return OperationResult<List<Author>>.Successful(authors);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving authors from the database.");
-                throw new ApplicationException("An error occurred while retrieving the authors.", ex);
+                return OperationResult<List<Author>>.Failure("An error occurred while retrieving the authors.");
             }
         }
 

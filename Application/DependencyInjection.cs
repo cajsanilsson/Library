@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.Extensions.DependencyInjection;
 using Application.UserQueries.LogIn.Helpers;
+using Application.Interfaces.RepositoryInterfaces;
 
 namespace Application
 {
@@ -10,8 +11,9 @@ namespace Application
         {
             var assembly = typeof(DependencyInjection).Assembly;
             services.AddMediatR(configuration => configuration.RegisterServicesFromAssembly(assembly));
-
             services.AddScoped<TokenHelper>();
+
+            
 
             return services;
         }

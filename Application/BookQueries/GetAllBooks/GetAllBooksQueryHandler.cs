@@ -1,44 +1,40 @@
-﻿using Infrastructure.Database;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 using MediatR;
 using Domain.Models;
 using Microsoft.Extensions.Logging;
+using Application.Interfaces.RepositoryInterfaces;
 
 namespace Application.BookQueries.GetAllBooks
 {
-    public class GetAllBooksQueryHandler : IRequestHandler<GetAllBooksQuery, List<Book>>
+    public class GetAllBooksQueryHandler : IRequestHandler<GetAllBooksQuery, OperationResult <List<Book>>>
     {
-        private readonly FakeDatabase _fakeDatabase;
-        private readonly ILogger<GetAllBooksQueryHandler> _logger;
+        private readonly IBookRepository _bookRepository;
 
-        public GetAllBooksQueryHandler(FakeDatabase fakeDatabase, ILogger<GetAllBooksQueryHandler> logger)
+        public GetAllBooksQueryHandler(IBookRepository bookRepository)
         {
-            _fakeDatabase = fakeDatabase;
-            _logger = logger;
+            _bookRepository = bookRepository;
         }
 
-        public Task<List<Book>> Handle(GetAllBooksQuery query, CancellationToken cancellationToken)
+        public async Task<OperationResult<List<Book>>> Handle(GetAllBooksQuery query, CancellationToken cancellationToken)
         {
             try
             {
-                if (_fakeDatabase.books == null)
+                // Hämta alla böcker från databasen
+                var books = await _bookRepository.GetAllBooks();
+
+                // Kontrollera om listan är null eller tom
+                if (books == null || !books.Any())
                 {
-                    _logger.LogWarning("The book list is null.");
-                    return Task.FromResult(new List<Book>());
+                    return OperationResult<List<Book>>.Failure("No books found.");
                 }
 
-                _logger.LogInformation("Fetching all books.");
-
-                return Task.FromResult(_fakeDatabase.books);
+                // Returnera framgång med böcker
+                return OperationResult<List<Book>>.Successful(books);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error fetching books.");
-                throw new ApplicationException("Error fetching books.", ex);
+                // Fånga oväntade fel
+                return OperationResult<List<Book>>.Failure("An error occurred while fetching books.");
             }
         }
 

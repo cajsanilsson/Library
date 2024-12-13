@@ -1,41 +1,40 @@
 ﻿using Application.AuthorQueries.GetAllAuthors;
 using Domain.Models;
 using Infrastructure.Database;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace Tests.AuthorTests
 {
     public class GetAllAuthorsTest
     {
+        private LibraryDatabase CreateInMemoryDatabase()
+        {
+            var options = new DbContextOptionsBuilder<LibraryDatabase>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
+
+            return new LibraryDatabase(options);
+        }
+
         [Fact]
         public async Task GetAllAuthorsQueryHandler_Should_ReturnAllAuthorsFromFakeDatabase()
         {
-            var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<GetAllAuthorsQueryHandler>();
-            var fakeDatabase = new FakeDatabase();
-            fakeDatabase.authors.Clear();
-            fakeDatabase.authors.Add(new Author
-            {
-                Id = Guid.NewGuid(),
-                Name = "Author 1"
-            });
-            fakeDatabase.authors.Add(new Author
-            {
-                Id = Guid.NewGuid(),
-                Name = "Author 2"
-            });
+            using var database = CreateInMemoryDatabase();
+            var authorRepository = new AuthorRepository(database);
+            var handler = new GetAllAuthorsQueryHandler(authorRepository);
 
-            var handler = new GetAllAuthorsQueryHandler(fakeDatabase, logger);
-            var query = new GetAllAuthorsQuery();
+            database.Authors.Add(new Author { Id = Guid.NewGuid(), Name = "Test Author1" });
+            database.Authors.Add(new Author { Id = Guid.NewGuid(), Name = "Test Author2" });
+            await database.SaveChangesAsync();
 
-            var authors = await handler.Handle(query, CancellationToken.None);
+            var getAllAuthorsQuery = new GetAllAuthorsQuery();
 
-            Assert.NotNull(authors);
-            Assert.Equal(2, authors.Count);
+            var result = await handler.Handle(getAllAuthorsQuery, CancellationToken.None);
+
+            Assert.True(result.Success);
+            Assert.Equal(2, result.Data.Count);
+            Assert.Equal("Operation successful", result.Message);
         }
     }
 }

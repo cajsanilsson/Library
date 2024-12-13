@@ -1,17 +1,12 @@
-﻿using Application.BookCommands.AddBookCommand;
-using Application.Interface.RepositoryInterfaces;
+﻿
+using Application.Interfaces.RepositoryInterfaces;
 using Domain.Models;
-
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Application.AuthorCommands.AddAuthorCommand
 {
-    public class AddAuthorCommandHandler : IRequestHandler<AddAuthorCommand, Author>
+    public class AddAuthorCommandHandler : IRequestHandler<AddAuthorCommand, OperationResult<Author>>
     {
         private readonly IAuthorRepository _authorRepository;
 
@@ -20,18 +15,11 @@ namespace Application.AuthorCommands.AddAuthorCommand
             _authorRepository = authorRepository;
         }
 
-        public async Task<Author> Handle(AddAuthorCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<Author>> Handle(AddAuthorCommand request, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(request.NewAuthor.Name))
             {
                 throw new ArgumentException("Author name cannot be empty.", nameof(request.NewAuthor.Name));
-            }
-
-            var existingAuthor = _authorRepository.AddAuthor(request.NewAuthor)
-                .FirstOrDefault(a => a.Name.Equals(request.NewAuthor.Name, StringComparison.OrdinalIgnoreCase));
-            if (existingAuthor != null)
-            {
-                throw new InvalidOperationException($"An author with the name '{request.NewAuthor.Name}' already exists.");
             }
 
             try
@@ -42,13 +30,13 @@ namespace Application.AuthorCommands.AddAuthorCommand
                     Name = request.NewAuthor.Name
                 };
 
-                _authorRepository.AddAuthor(request.NewAuthor);
+                await _authorRepository.AddAuthor(newAuthor);
 
-                return await Task.FromResult(newAuthor); 
+                return OperationResult<Author>.Successful(newAuthor);
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("An error occurred while adding a new author.", ex);
+                return OperationResult<Author>.Failure("An error occurred while adding a new author.");
             }
         }
     }

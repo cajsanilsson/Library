@@ -1,38 +1,45 @@
 ﻿using Application.AuthorCommands.UpdateAuthorCommand;
 using Domain.Models;
 using Infrastructure.Database;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace Tests.AuthorTests
 {
     public class UpdateAuthorTest
     {
+        private LibraryDatabase CreateInMemoryDatabase()
+        {
+            var options = new DbContextOptionsBuilder<LibraryDatabase>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
+
+            return new LibraryDatabase(options);
+        }
+
         [Fact]
         public async Task UpdateAuthorCommandHandler_Should_UpdateAuthorDetailsInFakeDatabase()
         {
-            // Arrange
-            var fakeDatabase = new FakeDatabase();
-            var author = new Author
-            {
-                Id = Guid.NewGuid(),
-                Name = "Old Name"
-            };
+            using var database = CreateInMemoryDatabase();
+            var authorRepository = new AuthorRepository(database);
+            var handler = new UpdateAuthorCommandHandler(authorRepository);
 
-            fakeDatabase.authors.Add(author);
+            var authorId = Guid.NewGuid();
+            var existingAuthor = new Author { Id = authorId, Name = "Old Name" };
+            database.Authors.Add(existingAuthor);
+            await database.SaveChangesAsync();
 
-            var handler = new UpdateAuthorCommandHandler(fakeDatabase);
-            var command = new UpdateAuthorCommand(author.Id, "New Name");
+            var updatedAuthor = new Author { Id = authorId, Name = "Updated Name" };
+            
+            var updateAuthorCommand = new UpdateAuthorCommand(authorId, updatedAuthor.Name);
 
-            // Act
-            var updatedAuthor = await handler.Handle(command, CancellationToken.None);
+            var result = await handler.Handle(updateAuthorCommand, CancellationToken.None);
 
-            // Assert
-            Assert.NotNull(updatedAuthor);
-            Assert.Equal("New Name", updatedAuthor.Name);
+            var updatedDbAuthor = database.Authors.FirstOrDefault(a => a.Id == authorId);
+            Assert.NotNull(updatedDbAuthor);
+            Assert.Equal("Updated Name", updatedDbAuthor.Name);
+            Assert.True(result.Success);
+            Assert.Equal("Updated Name", result.Data.Name);
         }
     }
 }

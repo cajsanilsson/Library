@@ -1,54 +1,42 @@
-﻿using Application.BookQueries.GetBookById;
+﻿
+using Application.Interfaces.RepositoryInterfaces;
 using Domain.Models;
-using Infrastructure.Database;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 
 namespace Application.AuthorQueries.GetAuthorById
 {
-    public class GetAuthorByIdQueryHandler : IRequestHandler<GetAuthorByIdQuery, Author>
+    public class GetAuthorByIdQueryHandler : IRequestHandler<GetAuthorByIdQuery, OperationResult<Author>>
     {
-        private readonly FakeDatabase _fakeDatabase;
-        private readonly ILogger<GetAuthorByIdQueryHandler> _logger;
+        private readonly IAuthorRepository _authorRepository;
 
-        public GetAuthorByIdQueryHandler(FakeDatabase fakeDatabase, ILogger<GetAuthorByIdQueryHandler> logger)
+        public GetAuthorByIdQueryHandler(IAuthorRepository authorRepository)
         {
-            _fakeDatabase = fakeDatabase;
-            _logger = logger;
+            _authorRepository = authorRepository;
         }
 
-        public async Task<Author> Handle(GetAuthorByIdQuery query, CancellationToken cancellationToken)
+        public async Task<OperationResult<Author>> Handle(GetAuthorByIdQuery query, CancellationToken cancellationToken)
         {
+            if (query.Id == Guid.Empty)
+            {
+                return OperationResult<Author>.Failure("Invalid author ID.");
+            }
+
             try
             {
-                if (query.Id == Guid.Empty)
-                {
-                    throw new ArgumentException("Invalid author ID.", nameof(query.Id));
-                }
-                var authorOfChoice = _fakeDatabase.authors.FirstOrDefault(author => author.Id == query.Id);
+                var author = await _authorRepository.GetAuthorById(query.Id);
 
-                if (authorOfChoice == null)
+                if (author == null)
                 {
-                    throw new KeyNotFoundException($"Author with ID {query.Id} not found.");
+                    return OperationResult<Author>.Failure($"Author with ID {query.Id} not found.");
                 }
 
-                return authorOfChoice;
+                return OperationResult<Author>.Successful(author);
             }
-            catch (ArgumentException ex)
+            catch (Exception)
             {
-                _logger.LogWarning(ex, "Invalid author ID provided.");
-                throw; 
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Author not found.");
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving author by ID.");
-                throw new ApplicationException("An error occurred while retrieving the author.", ex);
+                return OperationResult<Author>.Failure("An error occurred while retrieving the author.");
             }
         }
     }
