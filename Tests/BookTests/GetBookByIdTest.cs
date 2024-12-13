@@ -1,57 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Application.AuthorQueries.GetAllAuthors;
+﻿
 using Application.BookQueries.GetBookById;
 using Domain.Models;
 using Infrastructure.Database;
+using Infrastructure.Repositories;
 using MediatR;
-using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace Tests.BookTests
 {
     public class GetBookByIdTest
     {
-        [Fact]
-        public async Task GetBookByIdQueryHandler_Should_ReturnCorrectBook_WhenBookExists()
+        private LibraryDatabase CreateInMemoryDatabase()
         {
-            var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<GetBookByIdQueryHandler>();
-            var fakeDatabase = new FakeDatabase();
-            var book = new Book
-            {
-                Id = Guid.NewGuid(),
-                Title = "Test Book",
-                Description = "Test Description"
-            };
+            var options = new DbContextOptionsBuilder<LibraryDatabase>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
 
-            fakeDatabase.books.Add(book);
-
-            var handler = new GetBookByIdQueryHandler(fakeDatabase, logger);
-            var query = new GetBookByIdQuery(book.Id);
-
-            var result = await handler.Handle(query, CancellationToken.None);
-
-            Assert.NotNull(result);
-            Assert.Equal(book.Id, result.Id);
-            Assert.Equal(book.Title, result.Title);
-            Assert.Equal(book.Description, result.Description);
+            return new LibraryDatabase(options);
         }
 
         [Fact]
-
-        public async Task GetBookByIdQueryHandler_Should_ThrowKeyNotFoundException_WhenBookDoesNotExist()
+        public async Task GetBookByIdQueryHandler_Should_ReturnCorrectBook_WhenBookExists()
         {
-            var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<GetBookByIdQueryHandler>();
-            var fakeDatabase = new FakeDatabase();
+            using var database = CreateInMemoryDatabase();
+            var bookRepository = new BookRepository(database);
+            var handler = new GetBookByIdQueryHandler(bookRepository);
 
-            var handler = new GetBookByIdQueryHandler(fakeDatabase, logger);
-            var query = new GetBookByIdQuery(Guid.NewGuid());
+            var bookId = Guid.NewGuid();
+            var book = new Book { Id = bookId, Title = "Test Book", Description = "Test Description" };
+            database.Books.Add(book);
+            await database.SaveChangesAsync();
 
-            var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => handler.Handle(query, CancellationToken.None));
+            var getBooksByIdQuery = new GetBookByIdQuery(bookId);
 
-            Assert.Equal($"Book with ID {query.Id} not found.", exception.Message);
+            var result = await handler.Handle(getBooksByIdQuery, CancellationToken.None);
+
+            Assert.True(result.Success);
+            Assert.Equal("Test Book", result.Data.Title);
+            Assert.Equal("Operation successful", result.Message);
         }
     }
 }

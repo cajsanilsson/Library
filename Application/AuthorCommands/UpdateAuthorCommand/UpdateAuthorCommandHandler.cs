@@ -1,52 +1,47 @@
-﻿using Application.BookCommands.UpdateBookCommand;
+﻿
+using Application.Interfaces.RepositoryInterfaces;
 using Domain.Models;
-using Infrastructure.Database;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.AuthorCommands.UpdateAuthorCommand
 {
-    public class UpdateAuthorCommandHandler : IRequestHandler<UpdateAuthorCommand, Author>
+    public class UpdateAuthorCommandHandler : IRequestHandler<UpdateAuthorCommand,OperationResult<Author>>
     {
-        private readonly FakeDatabase _fakeDatabase;
+        private readonly IAuthorRepository _authorRepository;
 
-        public UpdateAuthorCommandHandler(FakeDatabase fakeDatabase)
+        public UpdateAuthorCommandHandler(IAuthorRepository authorRepository)
         {
-            _fakeDatabase = fakeDatabase;
+            _authorRepository = authorRepository;
         }
 
-        public Task<Author> Handle(UpdateAuthorCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<Author>> Handle(UpdateAuthorCommand request, CancellationToken cancellationToken)
         {
             if (request.AuthorId == Guid.Empty)
             {
-                throw new ArgumentException("Invalid author ID.", nameof(request.AuthorId));
+                return OperationResult<Author>.Failure("Invalid author ID.");
             }
 
-            var authorToUpdate = _fakeDatabase.authors.FirstOrDefault(a => a.Id == request.AuthorId);
+            var authorToUpdate = await _authorRepository.GetAuthorById(request.AuthorId);
 
             if (authorToUpdate == null)
             {
-                throw new KeyNotFoundException($"Author with ID {request.AuthorId} not found.");
+                return OperationResult<Author>.Failure($"Author with ID {request.AuthorId} not found.");
             }
 
             if (!string.IsNullOrEmpty(request.UpdatedName))
             {
                 authorToUpdate.Name = request.UpdatedName;
             }
-
             try
             {
-                return Task.FromResult(authorToUpdate);
+                await _authorRepository.UpdateAuthor(request.AuthorId, authorToUpdate);
+
+                return OperationResult<Author>.Successful(authorToUpdate);
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("An error occurred while updating the author.", ex);
+                return OperationResult<Author>.Failure("An error occurred while updating the author.");
             }
         }
-
     }
 }

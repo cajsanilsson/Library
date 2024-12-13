@@ -1,27 +1,33 @@
-﻿using Domain.Models;
-using Infrastructure.Database;
+﻿using Application.Interfaces.RepositoryInterfaces;
+using Domain.Models;
 using MediatR;
 
 namespace Application.UserQueries.GetAllUsers
 {
-    public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, List<User>>
+    public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, OperationResult<List<User>>>
     {
-        private readonly FakeDatabase _fakeDatabase;
-
-        public GetAllUsersQueryHandler(FakeDatabase fakeDatabase)
+        private readonly IUserRepository _userRepository;
+        public GetAllUsersQueryHandler(IUserRepository userRepository)
         {
-            _fakeDatabase = fakeDatabase;
+            _userRepository = userRepository;
         }
-        public Task<List<User>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
+        public async Task<OperationResult<List<User>>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
         {
-            List<User> allUsersFromFakeDatabase = _fakeDatabase.users;
-
-            if (allUsersFromFakeDatabase == null || !allUsersFromFakeDatabase.Any())
+            try
             {
-                throw new ArgumentException("Userlist is empty or null");
-            }
+                List<User> allUsers = await _userRepository.GetAllUsers();
 
-            return Task.FromResult(allUsersFromFakeDatabase);
+                if (allUsers == null || !allUsers.Any())
+                {
+                    return OperationResult<List<User>>.Failure("User list is empty or null", "No users found");
+                }
+
+                return OperationResult<List<User>>.Successful(allUsers, "Users fetched successfully");
+            }
+            catch (Exception ex)
+            {
+                return OperationResult<List<User>>.Failure($"An error occurred while fetching users: {ex.Message}");
+            }
         }
     }
 }

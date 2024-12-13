@@ -1,34 +1,42 @@
 ﻿using Application.AuthorCommands.DeleteAuthorCommand;
 using Domain.Models;
 using Infrastructure.Database;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace Tests.AuthorTests
 {
     public class DeleteAuthorTest
     {
+        private LibraryDatabase CreateInMemoryDatabase()
+        {
+            var options = new DbContextOptionsBuilder<LibraryDatabase>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
+
+            return new LibraryDatabase(options);
+        }
+
         [Fact]
         public async Task DeleteAuthorCommandHandler_Should_RemoveAuthorFromFakeDatabase()
         {
-            var fakeDatabase = new FakeDatabase();
-            var author = new Author
-            {
-                Id = Guid.NewGuid(),
-                Name = "Author to Delete"
-            };
+            using var database = CreateInMemoryDatabase();
+            var authorRepository = new AuthorRepository(database);
+            var handler = new DeleteAuthorCommandHandler(authorRepository);
 
-            fakeDatabase.authors.Add(author);
+            var authorId = Guid.NewGuid();
+            var existingAuthor = new Author { Id = authorId, Name = "Test Author" };
+            database.Authors.Add(existingAuthor);
+            await database.SaveChangesAsync();
 
-            var handler = new DeleteAuthorCommandHandler(fakeDatabase);
-            var command = new DeleteAuthorCommand(author.Id);
+            var deleteAuthorCommand = new DeleteAuthorCommand(authorId);
 
-            await handler.Handle(command, CancellationToken.None);
+            var result = await handler.Handle(deleteAuthorCommand, CancellationToken.None);
 
-            Assert.DoesNotContain(author, fakeDatabase.authors);
+            var deletedAuthor = database.Authors.FirstOrDefault(a => a.Id == authorId);
+            Assert.Null(deletedAuthor);
+            Assert.True(result.Success);
+            Assert.Equal("Operation successful", result.Message);
         }
     }
 }

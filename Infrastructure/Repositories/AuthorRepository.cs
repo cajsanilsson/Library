@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Application.Interface.RepositoryInterfaces;
+﻿
+using Application.Interfaces.RepositoryInterfaces;
 using Domain.Models;
 using Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
@@ -20,34 +17,52 @@ namespace Infrastructure.Repositories
 
         public async Task<Author> AddAuthor(Author author)
         {
-            _database.Authors.Add(author);
-            _database.SaveChanges();
+            await _database.Authors.AddAsync(author); // Använd `AddAsync` för asynkron operation.
+            await _database.SaveChangesAsync();
             return author;
         }
 
-        public Task<Author> DeleteAuthor(Author author)
+        public async Task<Author> DeleteAuthor(Guid Id)
         {
-            throw new NotImplementedException();
+            Author authorToDelete = _database.Authors.FirstOrDefault(a => a.Id == Id);
+
+            // Kontrollera om författaren finns
+            if (authorToDelete == null)
+            {
+                throw new InvalidOperationException($"Author with ID {Id} not found.");
+            }
+
+            // Ta bort författaren
+            _database.Authors.Remove(authorToDelete);
+            await _database.SaveChangesAsync();
+
+            // Returnera den borttagna författaren
+            return authorToDelete;
         }
 
-        public Task<List<Author>> GetAllAuthors()
+        public async Task<List<Author>> GetAllAuthors()
         {
-            throw new NotImplementedException();
+            return await _database.Authors.ToListAsync(); // Returnerar alla författare som en lista.
         }
 
-        public Task<Author> GetAuthorById(Guid id)
+        public async Task<Author> GetAuthorById(Guid id)
         {
-            throw new NotImplementedException();
+            return await _database.Authors.FindAsync(id); // Hämtar författare baserat på ID.
         }
 
-        public Task<Author> UpdateAuthor(Author author)
+        public async Task<Author> UpdateAuthor(Guid id, Author updatedAuthor)
         {
-            throw new NotImplementedException();
-        }
+            var authorToUpdate = await _database.Authors.FirstOrDefaultAsync(a => a.Id == id);
+            if (authorToUpdate != null)
+            {
+                // Uppdatera endast fält som är ändrade.
+                authorToUpdate.Name = updatedAuthor.Name;
 
-        public Task<Author> UpdateAuthor(Guid id, Author author)
-        {
-            throw new NotImplementedException();
+                _database.Authors.Update(authorToUpdate); // Markera objektet som ändrat.
+                await _database.SaveChangesAsync(); // Spara ändringar till databasen.
+                return authorToUpdate;
+            }
+            return null; // Om författaren inte hittades.
         }
     }
 }

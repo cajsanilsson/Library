@@ -1,38 +1,43 @@
 ﻿
 
+using Application.Interfaces.RepositoryInterfaces;
 using Domain.Models;
-using Infrastructure.Database;
 using MediatR;
 
 namespace Application.UserCommands
 {
-    public class AddUserCommandHandler : IRequestHandler<AddUserCommand, User>
+    public class AddUserCommandHandler : IRequestHandler<AddUserCommand, OperationResult<User>>
     {
-        private readonly FakeDatabase _fakeDatabase;
+        private readonly IUserRepository _userRepository;
 
-        public AddUserCommandHandler(FakeDatabase fakeDatabase)
+        public AddUserCommandHandler(IUserRepository userRepository)
         {
-            _fakeDatabase = fakeDatabase;
+            _userRepository = userRepository;
         }
-        public Task<User> Handle(AddUserCommand request, CancellationToken cancellationToken)
+        public async Task <OperationResult<User>> Handle(AddUserCommand request, CancellationToken cancellationToken)
         {
-            if (request == null || request.NewUser == null ||
-              string.IsNullOrWhiteSpace(request.NewUser.Username) ||
-              string.IsNullOrWhiteSpace(request.NewUser.Password))
+            if (string.IsNullOrEmpty(request.NewUser.Username))
             {
-                throw new ArgumentException("Author name and description cannot be empty or null");
+                throw new ArgumentException("Username cannot be empty.", nameof(request.NewUser.Username));
             }
 
-            User userToCreate = new()
+            try
             {
-                Id = Guid.NewGuid(),
-                Username = request.NewUser.Username,
-                Password = request.NewUser.Password,
-            };
+                User newUser = new()
+                {
+                    Id = Guid.NewGuid(),
+                    Username = request.NewUser.Username
+                };
 
-            _fakeDatabase.users.Add(userToCreate);
+                await _userRepository.AddUser(newUser);
 
-            return Task.FromResult(userToCreate);
+                return OperationResult<User>.Successful(newUser);
+            }
+            catch (Exception ex)
+            {
+                return OperationResult<User>.Failure("An error occurred while adding a new user.");
+            }
+           
         }
     }
 

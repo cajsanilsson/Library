@@ -1,45 +1,44 @@
-﻿using Domain.Models;
-using Infrastructure.Database;
+﻿using Application.Interfaces.RepositoryInterfaces;
+using Domain.Models;
 using MediatR;
-using Microsoft.Extensions.Logging;
 
 namespace Application.BookCommands.DeleteBookCommand
 {
-    public class DeleteBookCommandHandler : IRequestHandler<DeleteBookCommand, Book>
+    public class DeleteBookCommandHandler : IRequestHandler<DeleteBookCommand, OperationResult <Book>>
     {
-        private readonly FakeDatabase _fakeDatabase;
+        private readonly IBookRepository _bookRepository;
 
-        private readonly ILogger<DeleteBookCommandHandler> _logger;
-
-        public DeleteBookCommandHandler(FakeDatabase fakeDatabase, ILogger<DeleteBookCommandHandler> logger)
+        public DeleteBookCommandHandler(IBookRepository bookRepository)
         {
-            _fakeDatabase = fakeDatabase;
-            _logger = logger;
+            _bookRepository = bookRepository;
         }
 
-        public Task<Book> Handle(DeleteBookCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<Book>> Handle(DeleteBookCommand request, CancellationToken cancellationToken)
         {
             if (request.Id == Guid.Empty)
             {
-                _logger.LogError("Attempted to delete a book with an empty ID.");
-                throw new ArgumentException("Invalid book ID.");
+                return OperationResult<Book>.Failure("Invalid book ID.");
             }
 
-            var bookToDelete = _fakeDatabase.books.FirstOrDefault(b => b.Id == request.Id);
+            var bookToDelete = await _bookRepository.GetBookById(request.Id);
 
             if (bookToDelete == null)
             {
-                _logger.LogWarning("Book with ID {BookId} not found.", request.Id);
-                throw new KeyNotFoundException($"Book with ID {request.Id} not found.");
+                return OperationResult<Book>.Failure($"Author with ID {request.Id} not found.");
             }
 
-            _fakeDatabase.books.Remove(bookToDelete);
+            try
+            {
+                await _bookRepository.DeleteBook(request.Id);
 
-            _logger.LogInformation("Successfully deleted book with ID {BookId}.", request.Id);
-
-            return Task.FromResult(bookToDelete);
+                // Return success result with the deleted author
+                return OperationResult<Book>.Successful(bookToDelete);
+            }
+            catch (Exception ex)
+            {
+                // Return failure result with error message
+                return OperationResult<Book>.Failure("An error occurred while deleting the author.");
+            }
         }
-
-        
     }
 }

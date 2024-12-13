@@ -1,46 +1,59 @@
 ﻿using MediatR;
-using Infrastructure.Database;
 using Domain.Models;
-using Microsoft.Extensions.Logging;
+using Application.Interfaces.RepositoryInterfaces;
 
 
 namespace Application.BookCommands.UpdateBookCommand
 {
-    public class UpdateBookCommandHandler : IRequestHandler<UpdateBookCommand, Book>
+    public class UpdateBookCommandHandler : IRequestHandler<UpdateBookCommand, OperationResult <Book>>
     {
-        private readonly FakeDatabase _fakeDatabase;
-        
-        private readonly ILogger<UpdateBookCommandHandler> _logger;
+        private readonly IBookRepository _bookRepository;
 
-        public UpdateBookCommandHandler(FakeDatabase fakeDatabase, ILogger<UpdateBookCommandHandler> logger)
+        public UpdateBookCommandHandler(IBookRepository bookRepository)
         {
-            _fakeDatabase = fakeDatabase;
-            _logger = logger;
+            _bookRepository = bookRepository;
         }
 
-        public Task<Book> Handle(UpdateBookCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<Book>> Handle(UpdateBookCommand request, CancellationToken cancellationToken)
         {
             if (request.BookId == Guid.Empty)
             {
-                _logger.LogError("Attempted to update a book with an empty ID.");
-                throw new ArgumentException("Invalid book ID.");
+                return OperationResult<Book>.Failure("Invalid book ID.");
             }
 
-            var bookToUpdate = _fakeDatabase.books.FirstOrDefault(b => b.Id == request.BookId);
+            // Hämta boken från databasen
+            var bookToUpdate = await _bookRepository.GetBookById(request.BookId);
 
             if (bookToUpdate == null)
             {
-                _logger.LogWarning("Book with ID {BookId} not found.", request.BookId);
-                throw new KeyNotFoundException($"Book with ID {request.BookId} not found.");
+                return OperationResult<Book>.Failure($"Book with ID {request.BookId} not found.");
             }
 
-            bookToUpdate.Title = request.NewTitle ?? bookToUpdate.Title;
-            bookToUpdate.Description = request.NewDescription ?? bookToUpdate.Description;
+            // Uppdatera titel om en ny titel tillhandahålls
+            if (!string.IsNullOrEmpty(request.NewTitle))
+            {
+                bookToUpdate.Title = request.NewTitle;
+            }
 
-            _logger.LogInformation("Successfully updated book with ID {BookId}. New Title: {NewTitle}, New Description: {NewDescription}",
-                request.BookId, request.NewTitle, request.NewDescription);
+            // Uppdatera beskrivning om en ny beskrivning tillhandahålls
+            if (!string.IsNullOrEmpty(request.NewDescription))
+            {
+                bookToUpdate.Description = request.NewDescription;
+            }
 
-            return Task.FromResult(bookToUpdate);
+            try
+            {
+                // Uppdatera boken i databasen
+                await _bookRepository.UpdateBook(request.BookId, bookToUpdate); // Korrigera UpdateBook-metoden
+
+                // Returnera framgångsresultat med uppdaterad bok
+                return OperationResult<Book>.Successful(bookToUpdate, "Book updated successfully.");
+            }
+            catch (Exception ex)
+            {
+                // Returnera ett felresultat
+                return OperationResult<Book>.Failure($"An error occurred while updating the book: {ex.Message}");
+            }
         }
     }
 }

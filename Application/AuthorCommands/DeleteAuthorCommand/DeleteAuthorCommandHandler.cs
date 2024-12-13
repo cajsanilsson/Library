@@ -1,45 +1,43 @@
-﻿using Domain.Models;
-using Infrastructure.Database;
+﻿using Application.Interfaces.RepositoryInterfaces;
+using Domain.Models;
 using MediatR;
 
 
 namespace Application.AuthorCommands.DeleteAuthorCommand
 {
-    public class DeleteAuthorCommandHandler : IRequestHandler<DeleteAuthorCommand, Author>
+    public class DeleteAuthorCommandHandler : IRequestHandler<DeleteAuthorCommand, OperationResult<Author>>
     {
-        private readonly FakeDatabase _fakeDatabase;
+        private readonly IAuthorRepository _authorRepository;
 
-        public DeleteAuthorCommandHandler(FakeDatabase fakeDatabase)
+        public DeleteAuthorCommandHandler(IAuthorRepository authorRepository)
         {
-            _fakeDatabase = fakeDatabase;
+            _authorRepository = authorRepository;
         }
 
-        public Task<Author> Handle(DeleteAuthorCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<Author>> Handle(DeleteAuthorCommand request, CancellationToken cancellationToken)
         {
             if (request.Id == Guid.Empty)
             {
-                throw new ArgumentException("Invalid author ID.", nameof(request.Id));
+                return OperationResult<Author>.Failure("Invalid author ID.");
             }
 
-            var authorToDelete = _fakeDatabase.authors.FirstOrDefault(a => a.Id == request.Id);
+            var authorToDelete = await _authorRepository.GetAuthorById(request.Id);
 
             if (authorToDelete == null)
             {
-                throw new KeyNotFoundException($"Author with ID {request.Id} not found.");
+                return OperationResult<Author>.Failure($"Author with ID {request.Id} not found.");
             }
 
             try
             {
-                _fakeDatabase.authors.Remove(authorToDelete);
-
-                return Task.FromResult(authorToDelete);
+                await _authorRepository.DeleteAuthor(request.Id);
+                return OperationResult<Author>.Successful(authorToDelete);
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("An error occurred while deleting the author.", ex);
+                return OperationResult<Author>.Failure("An error occurred while deleting the author.");
             }
         }
-
     }
 }
 

@@ -5,7 +5,7 @@ using Domain.Models;
 
 namespace Application.BookCommands.DeleteBookCommand
 {
-    public class DeleteBookCommand : IRequest<Book>
+    public class DeleteBookCommand : IRequest<OperationResult <Book>>
     {
         public Guid Id { get; }
 

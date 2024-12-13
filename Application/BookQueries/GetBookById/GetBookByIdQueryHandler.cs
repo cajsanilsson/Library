@@ -1,47 +1,41 @@
-﻿using Domain.Models;
-using Infrastructure.Database;
+﻿using Application.Interfaces.RepositoryInterfaces;
+using Domain.Models;
 using MediatR;
-using Microsoft.Extensions.Logging;
 
 namespace Application.BookQueries.GetBookById
 {
-    public class GetBookByIdQueryHandler : IRequestHandler<GetBookByIdQuery, Book>
+    public class GetBookByIdQueryHandler : IRequestHandler<GetBookByIdQuery,OperationResult<Book>>
     {
-        private readonly FakeDatabase _fakeDatabase;
-        private readonly ILogger<GetBookByIdQueryHandler> _logger;
+        private readonly IBookRepository _bookRepository;
 
-        public GetBookByIdQueryHandler(FakeDatabase fakeDatabase, ILogger<GetBookByIdQueryHandler> logger)
+        public GetBookByIdQueryHandler(IBookRepository bookRepository)
         {
-            _fakeDatabase = fakeDatabase;
-            _logger = logger;
+            _bookRepository = bookRepository;
         }
 
-        public Task<Book> Handle(GetBookByIdQuery query, CancellationToken cancellationToken)
+        public async Task<OperationResult<Book>> Handle(GetBookByIdQuery query, CancellationToken cancellationToken)
         {
+
+            if (query.Id == Guid.Empty)
+            {
+                return OperationResult<Book>.Failure("Invalid book ID.");
+            }
+
             try
             {
-                if (query.Id == Guid.Empty)
-                {
-                    _logger.LogWarning("Invalid book ID provided: {Id}", query.Id);
-                    throw new ArgumentException("Invalid book ID", nameof(query.Id));
-                }
-
-                var book = _fakeDatabase.books.FirstOrDefault(b => b.Id == query.Id);
+                // Hämtar författaren från repository
+                var book = await _bookRepository.GetBookById(query.Id);
 
                 if (book == null)
                 {
-                    _logger.LogWarning("Book with ID {Id} not found.", query.Id);
-                    throw new KeyNotFoundException($"Book with ID {query.Id} not found.");
+                    return OperationResult<Book>.Failure($"Book with ID {query.Id} not found.");
                 }
 
-                _logger.LogInformation("Book with ID {Id} found and returned.", query.Id);
-
-                return Task.FromResult(book);
+                return OperationResult<Book>.Successful(book);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error fetching book with ID {Id}.", query.Id);
-                throw; 
+                return OperationResult<Book>.Failure("An error occurred while retrieving the book.");
             }
         }
     }

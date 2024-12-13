@@ -1,53 +1,42 @@
-﻿using Application.AuthorQueries.GetAllAuthors;
+﻿
 using Application.AuthorQueries.GetAuthorById;
 using Domain.Models;
 using Infrastructure.Database;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace Tests.AuthorTests
 {
     public class GetAuthorByIdTest
     {
-        [Fact]
-        public async Task GetAuthorByIdQueryHandler_Should_ReturnCorrectAuthor_WhenAuthorExists()
+        private LibraryDatabase CreateInMemoryDatabase()
         {
-            var fakeDatabase = new FakeDatabase();
-            var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<GetAuthorByIdQueryHandler>();
-            var author = new Author
-            {
-                Id = Guid.NewGuid(),
-                Name = "Test Author"
-            };
+            var options = new DbContextOptionsBuilder<LibraryDatabase>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
 
-            fakeDatabase.authors.Add(author);
-
-            var handler = new GetAuthorByIdQueryHandler(fakeDatabase, logger);
-            var query = new GetAuthorByIdQuery(author.Id);
-
-            var result = await handler.Handle(query, CancellationToken.None);
-
-            Assert.NotNull(result);
-            Assert.Equal(author.Id, result.Id);
-            Assert.Equal(author.Name, result.Name);
+            return new LibraryDatabase(options);
         }
 
         [Fact]
-        public async Task GetAuthorByIdQueryHandler_Should_ThrowKeyNotFoundException_WhenAuthorDoesNotExist()
+        public async Task GetAuthorByIdQueryHandler_Should_ReturnCorrectAuthor_WhenAuthorExists()
         {
-            var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<GetAuthorByIdQueryHandler>();
-            var fakeDatabase = new FakeDatabase();
+            using var database = CreateInMemoryDatabase();
+            var authorRepository = new AuthorRepository(database);
+            var handler = new GetAuthorByIdQueryHandler(authorRepository);
 
-            var handler = new GetAuthorByIdQueryHandler(fakeDatabase, logger);
-            var query = new GetAuthorByIdQuery(Guid.NewGuid());
+            var authorId = Guid.NewGuid();
+            var author = new Author { Id = authorId, Name = "Test Author" };
+            database.Authors.Add(author);
+            await database.SaveChangesAsync();
 
-            var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => handler.Handle(query, CancellationToken.None));
+            var getAuthorsByIdQuery = new GetAuthorByIdQuery(authorId);
 
-            Assert.Equal($"Author with ID {query.Id} not found.", exception.Message);
+            var result = await handler.Handle(getAuthorsByIdQuery, CancellationToken.None);
+
+            Assert.True(result.Success);
+            Assert.Equal("Test Author", result.Data.Name);
+            Assert.Equal("Operation successful", result.Message);
         }
     }
 }

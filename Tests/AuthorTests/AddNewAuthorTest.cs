@@ -1,34 +1,41 @@
 ﻿using Application.AuthorCommands.AddAuthorCommand;
 using Domain.Models;
 using Infrastructure.Database;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace Tests.AuthorTests
 {
     public class AddNewAuthorTest
     {
-        [Fact]
-        public async Task AddAuthorCommandHandler_Should_AddAuthorToFakeDatabase()
+        private LibraryDatabase CreateInMemoryDatabase()
         {
-            var fakeDatabase = new FakeDatabase();
-            var handler = new AddAuthorCommandHandler(fakeDatabase);
+            var options = new DbContextOptionsBuilder<LibraryDatabase>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
 
-            var newAuthor = new Author
-            {
-                Name = "Test Author"
-            };
+            return new LibraryDatabase(options);
+        }
 
-            var command = new AddAuthorCommand(newAuthor);
+        [Fact]
+        public async Task Handle_ShouldAddAuthor_WhenValidRequest()
+        {
+            using var database = CreateInMemoryDatabase();
+            var authorRepository = new AuthorRepository(database);
+            var handler = new AddAuthorCommandHandler(authorRepository);
 
-            var result = await handler.Handle(command, CancellationToken.None);
+            var newAuthor = new Author { Name = "Test Author" };
+            var addAuthorCommand = new AddAuthorCommand(newAuthor);
 
-            Assert.NotNull(result);
-            Assert.Equal("Test Author", result.Name);
-            Assert.Contains(result, fakeDatabase.authors);
+            
+            var result = await handler.Handle(addAuthorCommand, CancellationToken.None);
+
+            
+            var addedAuthor = database.Authors.FirstOrDefault(a => a.Name == "Test Author");
+            Assert.NotNull(addedAuthor);
+            Assert.Equal("Test Author", addedAuthor.Name);
+            Assert.True(result.Success);
+            Assert.Equal("Operation successful", result.Message);
         }
     }
 }

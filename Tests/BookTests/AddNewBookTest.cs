@@ -1,42 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Application.AuthorQueries.GetAllAuthors;
+﻿
 using Application.BookCommands.AddBookCommand;
 using Domain.Models;
 using Infrastructure.Database;
+using Infrastructure.Repositories;
 using MediatR;
-using Microsoft.Extensions.Logging;
-
+using Microsoft.EntityFrameworkCore;
 
 namespace Tests.BookTests
 {
    public class AddNewBookTest
     {
-        [Fact]
-        public async Task AddBookToFakeDatabase()
+        private LibraryDatabase CreateInMemoryDatabase()
         {
-            var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<AddBookCommandHandler>();
-            var fakeDatabase = new FakeDatabase();
+            var options = new DbContextOptionsBuilder<LibraryDatabase>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
 
-            var handler = new AddBookCommandHandler(fakeDatabase, logger);
+            return new LibraryDatabase(options);
+        }
 
-            var newBook = new Book
-            {
-                Title = "Test Title",
-                Description = "Test Description"
-            };
+        [Fact]
+        public async Task Handle_ShouldAddBook_WhenValidRequest()
+        {
+            using var database = CreateInMemoryDatabase();
+            var bookRepository = new BookRepository(database);
+            var handler = new AddBookCommandHandler(bookRepository);
 
-            var command = new AddBookCommand(newBook);
+            var newBook = new Book { Title = "Test Book", Description = "Test Description" };
+            var addBookCommand = new AddBookCommand(newBook);
 
-            var result = await handler.Handle(command, CancellationToken.None);
+            var result = await handler.Handle(addBookCommand, CancellationToken.None);
 
-            Assert.NotNull(result);
-            Assert.Equal("Test Title", result.Title);
-            Assert.Equal("Test Description", result.Description);
-            Assert.Contains(result, fakeDatabase.books);
+            var addedBook = database.Books.FirstOrDefault(b => b.Title == "Test Book");
+            Assert.NotNull(addedBook); 
+            Assert.Equal("Test Book", addedBook.Title); 
+            Assert.Equal("Test Description", addedBook.Description);  
+            Assert.True(result.Success);  
+            Assert.Equal("Operation successful", result.Message);
         }
     }
 

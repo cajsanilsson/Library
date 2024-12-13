@@ -62,7 +62,16 @@ namespace API.Controllers
         {
             try
             {
-                var authorToAdd = await _mediator.Send(command);
+                var operationResult = await _mediator.Send(command);
+
+                // Kontrollera om operationen lyckades
+                if (!operationResult.Success)
+                {
+                    _logger.LogWarning("Failed to add author: {Error}", operationResult.ErrorMessage);
+                    return BadRequest(new { error = operationResult.ErrorMessage });
+                }
+
+                var authorToAdd = operationResult.Data; // Hämta Author-objektet
                 return CreatedAtAction(nameof(GetAuthorById), new { id = authorToAdd.Id }, authorToAdd);
             }
             catch (Exception ex)

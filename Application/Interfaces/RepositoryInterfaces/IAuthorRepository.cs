@@ -1,6 +1,6 @@
 ﻿using Domain.Models;
 
-namespace Application.Interface.RepositoryInterfaces
+namespace Application.Interfaces.RepositoryInterfaces
 {
     public interface IAuthorRepository
     {
@@ -8,7 +8,7 @@ namespace Application.Interface.RepositoryInterfaces
         Task<List<Author>> GetAllAuthors();
         Task<Author> GetAuthorById(Guid id);
         Task<Author> UpdateAuthor(Guid id, Author author);
-        Task<Author> DeleteAuthor(Author author);
+        Task<Author> DeleteAuthor(Guid Id);
 
     }
 }
